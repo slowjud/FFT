@@ -1,0 +1,14 @@
+require 'rake/clean'
+
+CLEAN.include '*.o', 'Makefile', 'mkmf.log'
+CLOBBER.include 'fft.so', 'fft.bundle', 'fft.c'
+
+task :default => ['fft.bundle']
+
+file 'fft.bundle' => ['fft.c', 'Makefile'] do
+  sh "make"
+end
+
+file 'Makefile' do
+  ruby "extconf.rb"
+end
