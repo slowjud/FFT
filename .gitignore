@@ -1,0 +1,6 @@
+.DS_Store
+ext/Makefile
+ext/*.o
+ext/fft.so
+ext/fft.bundle
+ext/*.log

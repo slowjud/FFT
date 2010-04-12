@@ -1,11 +1,11 @@
 require 'rake/clean'
 
 CLEAN.include '*.o', 'Makefile', 'mkmf.log'
-CLOBBER.include 'fft.so', 'fft.bundle', 'fft.c'
+CLOBBER.include 'fft.so', 'fft.bundle'
 
 task :default => ['fft.bundle']
 
-file 'fft.bundle' => ['fft.c', 'Makefile'] do
+file 'fft.bundle' => ['Makefile'] do
   sh "make"
 end
 
