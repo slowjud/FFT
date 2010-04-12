@@ -1,6 +1,6 @@
 = fft
 
-http://github.com/slowjud/fft
+http://github.com/slowjud/FFT
 
 == DESCRIPTION:
 
