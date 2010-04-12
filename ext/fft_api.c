@@ -9,20 +9,23 @@
 
 // Validate the incoming array
 static int validate( VALUE self ) {
-    int i;
+    int    i;
+    int    len;
     VALUE *values;
+    
     // Check we're an Array
     Check_Type( self, T_ARRAY );
-    
-    values = RARRAY_PTR( self );
+
+    // make sure the size of the array is a power of 2
+    len = RARRAY_LEN( self );
+    if( ( len < 2 ) || ( len & ( len − 1 ) ) ) return FALSE;
+        
     // go through the array and check for FIXNUM_P(value)
+    values = RARRAY_PTR( self );
     for( i = 0; i < RARRAY_LEN( self ); i++ ) {
         if( !FIXNUM_P( values[i] ) ) return FALSE;
     }
-    
-    // make sure the size of the array is a power of 2
-    // RARRAY_LEN( self );
-    
+
     return TRUE;
 }
 
