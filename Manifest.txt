@@ -4,4 +4,5 @@ Manifest.txt
 README.txt
 Rakefile
 lib/fft.rb
+ext/fft_api.c
 features/fft.feature

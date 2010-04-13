@@ -2,6 +2,7 @@
 
 require 'rubygems'
 require 'hoe'
+require 'rake/extensiontask'
 
 Hoe.spec 'fft' do
   developer('Jude Sutton', 'jude.sutton@gmail.com')

@@ -4,3 +4,4 @@ ext/*.o
 ext/*.so
 ext/*.bundle
 ext/*.log
+pkg/*
