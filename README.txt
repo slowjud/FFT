@@ -16,8 +16,14 @@ FFT is a Fast Fourier Transform C extension for Ruby
 
 == SYNOPSIS:
 
+* Use an array or complex numbers in the form of [x, iy]
+
+* To perform a farward transform
   my_array = [[1,3],[2,5.2],[3.5,7],[4,22]]
   my_fft = my_array.fft
+
+* To perform the reverse transform
+  my_array = my_fft.rfft
 
 == REQUIREMENTS:
 
