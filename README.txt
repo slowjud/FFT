@@ -10,8 +10,9 @@ FFT is a Fast Fourier Transform C extension for Ruby
 
 * The ruby array passed in must be power of 2 in size.
 * The ruby array can only contain numbers.
-* Currently only works on 2D complex transforms.
+* Currently only works on 1D complex transforms (time series).
 * I need to add some error messages rather than failing silently.
+* I need to add some tests.
 
 == SYNOPSIS:
 
