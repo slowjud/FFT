@@ -9,13 +9,13 @@ FFT is a Fast Fourier Transform C extension for Ruby
 == FEATURES/PROBLEMS:
 
 * The ruby array passed in must be power of 2 in size.
-* The ruby array can only contain integers.
+* The ruby array can only contain numbers.
 * Currently only works on 2D complex transforms.
 * I need to add some error messages rather than failing silently.
 
 == SYNOPSIS:
 
-  my_array = [1,2,3,4]
+  my_array = [[1,3],[2,5.2],[3.5,7],[4,22]]
   my_fft = my_array.fft
 
 == REQUIREMENTS:
