@@ -1,6 +1,6 @@
 require 'fft_api'
 
-VERSION = '0.1.0'
+VERSION = '0.1.1'
 
 class Array  
   include FFTAPI
