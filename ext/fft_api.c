@@ -10,50 +10,51 @@
 
 // Validate the incoming array
 static int validate( VALUE self ) {
-    long len, i;
-    VALUE *values;
+    long length;
+    VALUE *values = RARRAY_PTR( self );
 
     // Check we're an Array
     Check_Type( self, T_ARRAY );
 
-    // make sure the size of the array is a power of 2
-    len = RARRAY_LEN( self );
-    if( ( len < 2 ) || ( len & ( len - 1 ) ) ) return FALSE;
+    // make sure we have an array of two arrays
+    if( RARRAY_LEN( self ) != 2 ) return FALSE;
+    
+    // make sure the arrays are of the same length
+    if( RARRAY_LEN( values[0] ) != RARRAY_LEN( values[1] ) ) return FALSE;
 
-    // check that we have an appropriate array
-    values = RARRAY_PTR( self );
-    for( i = 0; i < RARRAY_LEN( self ); i++ ) {
-        Check_Type( values[i], T_ARRAY );
-        if( RARRAY_LEN( values[i] ) != 2 ) return FALSE;
-    }
+    // make sure the size of the array is a power of 2
+    length = RARRAY_LEN( values[0] );
+    if( ( length < 2 ) || ( length & ( length - 1 ) ) ) return FALSE;
 
     return TRUE;
 }
 
-static VALUE perform_fft( double **values, long len, int direction ){
-    VALUE outArray = rb_ary_new2( len );
+static VALUE perform_fft( double **values, long length, int direction ){
+    VALUE outArray = rb_ary_new2( 2 );
+    VALUE xArray = rb_ary_new2( length );
+    VALUE yArray = rb_ary_new2( length );
     
     long exponent, i, i1, j, k, i2, l, l1, l2;
     double c1,c2,tx,ty,t1,t2,u1,u2,z;
 
     // Caculate the exponent
     exponent = 0;
-    i = len;
+    i = length;
     while( i >>= 1 ){
         exponent++;
     }
 
     // Do the bit reversal
-    i2 = len >> 1;
+    i2 = length >> 1;
     j = 0;
-    for( i = 0; i < ( len - 1 ); i++ ){
+    for( i = 0; i < ( length - 1 ); i++ ){
         if( i < j ){
-            tx = values[i][0];
-            ty = values[i][1];
-            values[i][0] = values[j][0];
-            values[i][1] = values[j][1];
-            values[j][0] = tx;
-            values[j][1] = ty;
+            tx = values[0][i];
+            ty = values[1][i];
+            values[0][i] = values[0][j];
+            values[1][i] = values[1][j];
+            values[0][j] = tx;
+            values[1][j] = ty;
         }
         k = i2;
         while( k <= j ){
@@ -73,14 +74,14 @@ static VALUE perform_fft( double **values, long len, int direction ){
         u1 = 1.0;
         u2 = 0.0;
         for( j = 0; j < l1; j++ ){
-            for( i = j; i < len; i += l2){
+            for( i = j; i < length; i += l2){
                 i1 = i + l1;
-                t1 = u1 * values[i1][0] - u2 * values[i1][1];
-                t2 = u1 * values[i1][1] + u2 * values[i1][0];
-                values[i1][0] = values[i][0] - t1;
-                values[i1][1] = values[i][1] - t2;
-                values[i][0] += t1;
-                values[i][1] += t2;
+                t1 = u1 * values[0][i1] - u2 * values[1][i1];
+                t2 = u1 * values[1][i1] + u2 * values[0][i1];
+                values[0][i1] = values[0][i] - t1;
+                values[1][i1] = values[1][i] - t2;
+                values[0][i] += t1;
+                values[1][i] += t2;
             }
             z = u1 * c1 - u2 * c2;
             u2 = u1 * c2 + u2 * c1;
@@ -95,22 +96,26 @@ static VALUE perform_fft( double **values, long len, int direction ){
 
     // Scaling for forward transform
     if( direction == 1 ){
-        for( i = 0; i < len; i++ ){
-            values[i][0] /= len;
-            values[i][1] /= len;
+        for( i = 0; i < length; i++ ){
+            values[0][i] /= length;
+            values[1][i] /= length;
         }
     }
     // convert the doubles into ruby numbers and stick them into a ruby array
-    for( i = 0; i < len; i++ ){
-        rb_ary_push( outArray, rb_ary_new3( 2, DBL2NUM( values[i][0] ), DBL2NUM( values[i][1] ) ) );
+    for( i = 0; i < length; i++ ){
+        rb_ary_push( xArray, DBL2NUM( values[0][i] ) );
+        rb_ary_push( yArray, DBL2NUM( values[1][i] ) );
     }
+
+    rb_ary_push( outArray, xArray );
+    rb_ary_push( outArray, yArray );
     
     return outArray;
 }
 
 // perform the fft
 static VALUE prepare_fft( VALUE inArray, int direction ){
-    long i;
+    long i, length;
     VALUE *values;
     double **transformed;
     VALUE outArray;
@@ -119,22 +124,24 @@ static VALUE prepare_fft( VALUE inArray, int direction ){
         return Qnil;
     }
 
-    // convert the ruby array into a C array of integers using FIX2INT(Fixnum)
-    transformed = malloc( sizeof( double* ) * RARRAY_LEN( inArray ) );
+    // convert the ruby array into a C array of integers using NUM2DBL(Fixnum)
     values = RARRAY_PTR( inArray );
-    for( i = 0; i < RARRAY_LEN( inArray ); i++ ) {
+    length = RARRAY_LEN( values[0] );
+    transformed = malloc( sizeof( double ) * 2 );
+    transformed[0] = malloc( sizeof( double* ) * RARRAY_LEN( values[0] ) );
+    transformed[1] = malloc( sizeof( double* ) * RARRAY_LEN( values[1] ) );
+    for( i = 0; i < length; i++ ) {
         // process values
-        transformed[i] = malloc( sizeof( double ) * 2 );
-        transformed[i][0] = NUM2DBL( RARRAY_PTR( values[i] )[0] );
-        transformed[i][1] = NUM2DBL( RARRAY_PTR( values[i] )[1] );
+        transformed[0][i] = NUM2DBL( RARRAY_PTR( values[0] )[i] );
+        transformed[1][i] = NUM2DBL( RARRAY_PTR( values[1] )[i] );
     }
     
     // do the actual transform
-    outArray = perform_fft( transformed, RARRAY_LEN( inArray ), direction );
+    outArray = perform_fft( transformed, length, direction );
 
-    for( i = 0; i < RARRAY_LEN( inArray ); i++ ) {
-        free( transformed[i] );
-    }    
+    // No memory leaks here!
+    free( transformed[0] );
+    free( transformed[1] );
     free( transformed );
     
     return outArray;
